@@ -3,7 +3,7 @@ package main
 import (
 	"net/url"
 
-	"./azdo"
+	"github.com/aristosvo/AzurePipelinesAgentExporter/azdo"
 )
 
 var (

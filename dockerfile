@@ -1,10 +1,19 @@
-FROM golang:1.14 AS builder
+FROM golang:1.19 AS builder
+
+WORKDIR /usr/src/app
+
+# pre-copy/cache go.mod for pre-downloading dependencies and only redownloading them in subsequent builds if they change
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+
 COPY . .
-RUN go get -d -v .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o azdoexporter .
+RUN mkdir -p /usr/local/bin
+RUN go build -v -o /usr/local/bin/ ./...
+RUN ls /usr/local/bin/
 
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates
-COPY --from=builder /go/azdoexporter .
+RUN mkdir -p /usr/local/bin
+COPY --from=builder /usr/local/bin/AzurePipelinesAgentExporter /usr/local/bin/AzurePipelinesAgentExporter
 EXPOSE 8080
-ENTRYPOINT ["./azdoexporter"]
+ENTRYPOINT ["/usr/local/bin/AzurePipelinesAgentExporter"]
